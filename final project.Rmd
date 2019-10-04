@@ -1,0 +1,53 @@
+---
+title: "Final Project"
+author: "Parker Mas"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+library(knitr)
+library(janitor)
+library(ggplot2)
+library(gt)
+library(spotifyr)
+```
+
+### Billboard Data 
+
+```{r importing billboard data, include=FALSE, echo=FALSE}
+#Imported Billboard Hot 100 chart dataset that has entries from 08/02/1958 to 06/22/2019 for each week (chart is updated weekly)
+billboard <- read.csv("https://query.data.world/s/irbttf7p2dbspdoivd2mrdy67nosle", header=TRUE, stringsAsFactors=FALSE)
+
+#Used clean_names() from the janitor package to clean the names of the data
+billboard <- billboard %>%
+  clean_names()
+
+```
+
+I will be using this dataset, which has the Billboard Hot 100 entries for every week from August 1958 to June 2019 and various metrics such as peak position, song name, song performer, number of weeks on chart, as variables that measure the commercial performance of each song, which is an important component of my project. I used the clean_names() verb to make the data a little easier to use, but one thing I will have to think about is how I am going to grapple with 317,795 different entries in the dataset that will essentially all be important to the project I would like to do.
+
+### Spotify Data
+
+```{r spotify api, include=FALSE, echo=FALSE}
+#I have already loaded the spotifyr library, which is a wrapper I found on the internet that will allow me to take data from the spotify API in bulk. 
+
+Sys.setenv(SPOTIFY_CLIENT_ID = 'b18b4d94a7e2403fb3a66a6ab1ee382d')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = '7575f1754bb54f6fb7f4466c301ec106')
+
+access_token <- get_spotify_access_token()
+
+#This code sets my credentials to system environment variables so that I can more easily interact with the Spotify API (I don't fully understand it, but it seems to work!).
+
+#To get data on a track, I will use the hit song "finesse" by bruno mars as a test.
+
+finesse_audio_analysis <- get_track_audio_analysis("3Vo4wInECJQuz9BIBMOu8i")
+
+```
+
+For my spotify data, I will be using the various metadata tags attached to each song on spotify in order to do an analysis of songs on the billboard hot 100 charts over time  based on these characteristics. For example, do songs with faster or slower tempo chart better? Are there periods where louder songs are more popular? Are certain keys more popular/songs with a certain key better at perfoming commercially?
+
+Going forward, I need to come up with a better system for attaching the Spotify and Billboard data together for any given song, decide on exactly what variables I will use in my analysis, and think more about if I should narrow, or enlarge the scope of my project at all given the time restraints and what I know how to do/am able to do. I would appreciate any feedback/suggestions as I move forwards!
