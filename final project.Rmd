@@ -14,6 +14,7 @@ library(janitor)
 library(ggplot2)
 library(gt)
 library(spotifyr)
+library(ggthemes)
 ```
 
 ### Billboard Data 
@@ -51,3 +52,75 @@ finesse_audio_analysis <- get_track_audio_analysis("3Vo4wInECJQuz9BIBMOu8i")
 For my spotify data, I will be using the various metadata tags attached to each song on spotify in order to do an analysis of songs on the billboard hot 100 charts over time  based on these characteristics. For example, do songs with faster or slower tempo chart better? Are there periods where louder songs are more popular? Are certain keys more popular/songs with a certain key better at perfoming commercially?
 
 Going forward, I need to come up with a better system for attaching the Spotify and Billboard data together for any given song, decide on exactly what variables I will use in my analysis, and think more about if I should narrow, or enlarge the scope of my project at all given the time restraints and what I know how to do/am able to do. I would appreciate any feedback/suggestions as I move forwards!
+
+```{r milestone 4, echo = FALSE}
+
+april_1_2017_billboard <- billboard %>% 
+  filter(week_id == "4/1/2017") %>% 
+  select(week_position, song, week_id) %>% 
+  filter(week_position <= 10) %>% 
+  arrange(week_position) %>% 
+  view()
+
+#Here, I have pulled out the top 10 songs on the Billboard Hot 100 from the billboard data set that I originally read in last week. One of the tough things about the 'spotifyr' package (which seems to be the best spotify r package available) is that you can't search for a song by name, rather, you need to manually find the specific spotify ID of the song you want to look at. However, you can pull all the data on an individual artist, which indicates to me that a project that focused on a few higher profile artists (preferably those who have a decent amount of music out over a fairly long period of time) and looked at which of their songs were most commercially successful may be a more realistic endeavor.
+
+#However, for the purposes of demonstrating that I can create this graphic, I am going to manually call the audio features for each of the tracks in the April 4, 2017 top ten.
+
+shape_of_you <- get_track_audio_features("7qiZfU4dY1lWllzX7mPBI3")
+
+thats_what_i_like <- get_track_audio_features("0KKkJNfGyhkQ5aFogxQAPU")
+  
+bad_and_boujee <- get_track_audio_features("4Km5HrUvYTaSUfiSGPJeQR")
+
+i_dont_wanna_live_forever <- get_track_audio_features("2y5aJvzXhHPA94U5GFAcXe")
+
+i_feel_it_coming <- get_track_audio_features("3dhjNA0jGA8vHBQ1VdD6vV")
+
+tunnel_vision <- get_track_audio_features("4Q3N4Ct4zCuIHuZ65E3BD4")
+  
+love_on_the_brain <- get_track_audio_features("5oO3drDxtziYU2H1X23ZIp")
+  
+something_just_like_this <- get_track_audio_features("6RUKPb4LETWmmr3iAEQktW")
+
+paris <- get_track_audio_features("15vzANxN8G9wWfwAJLLMCg")
+
+ispy <- get_track_audio_features("2EEeOnHehOozLq4aS0n6SL")
+
+#Now, I put the data from all the tracks into a data frame in the correct order and add a column "week_position" so that I can join it with the billboard data and then create a plot out of it
+
+april_1_2017_spotify <- rbind(shape_of_you, thats_what_i_like, bad_and_boujee, i_dont_wanna_live_forever, i_feel_it_coming, tunnel_vision, love_on_the_brain, something_just_like_this, paris, ispy)
+
+april_1_2017_spotify <- april_1_2017_spotify %>%
+  mutate(week_position = 1:10)
+
+april_1_2017 <- merge(april_1_2017_billboard, april_1_2017_spotify, by = "week_position")
+
+april_1_2017 <- mutate_if(april_1_2017, is.character, as.factor)
+
+#april_1_2017 <- april_1_2017 %>% fct_relevel(song, c("Shape Of You", "That's What I Like", "Bad And Boujee", "I Don't Wanna Live Forever (Fifty Shades Darker)", "I Feel It Coming", "Tunnel Vision", "Love On The Brain", "Something Just Like This", "Paris", "iSpy"))
+
+plot <- april_1_2017 %>% 
+  select(song, danceability, week_position) %>% 
+  ggplot(aes(x = week_position, 
+             y = danceability, 
+             color = april_1_2017$song)) + 
+  geom_point(stat = "identity") +
+  labs(title = "Danceability of Billboard Top 10 Tracks",
+       subtitle = "Week of April 1, 2017",
+       color = "Song Name",
+       caption = "Do songs with higher danceability ratings chart better?") +
+  xlab(label = "Chart Position (Ascending, Left to Right)") +
+  ylab(label = "Danceability") + 
+  theme(plot.caption = element_text(size = 8)) +
+  theme_excel()
+
+```
+
+## Milestone 4
+```{r plot, echo=FALSE}
+plot
+```
+
+
+
+Here, I created a graphic that shows the danceability of the top 10 songs on the Billboard charts for the week of April 1, 2017. I had to do a variety of manipulations with the data, including the intitial filtering of the Billboard data, manually requesting the data for each of the 10 songs from the Spotify API, merging of the Spotify Data and then with the Billboard data. One of the things that really confuses me (still), and I would love if whomever is grading my milestone could help with/give me advice on, is why the factors for "song" come in correctly when I run "plot" in the .Rmd file ("Shape of You" is first), yet when I knit the file it defaults back to alphabetical order ("Bad and Boujee" is first). I also added a caption, title and subtitle, and axis labels as well as a theme to make my graphic more appealing and aesthetically coherent.
