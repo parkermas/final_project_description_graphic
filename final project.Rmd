@@ -15,19 +15,22 @@ library(ggplot2)
 library(gt)
 library(spotifyr)
 library(ggthemes)
+library(lubridate)
 ```
 
 ### Billboard Data 
 
 ```{r importing billboard data, include=FALSE, echo=FALSE}
 #Imported Billboard Hot 100 chart dataset that has entries from 08/02/1958 to 06/22/2019 for each week (chart is updated weekly)
-billboard <- read.csv("https://query.data.world/s/irbttf7p2dbspdoivd2mrdy67nosle", header=TRUE, stringsAsFactors=FALSE)
+
+billboard <- read_csv("https://query.data.world/s/irbttf7p2dbspdoivd2mrdy67nosle")
 
 #Used clean_names() from the janitor package to clean the names of the data
 billboard <- billboard %>%
   clean_names()
 
 ```
+, header=TRUE, stringsAsFactors=FALSE
 
 I will be using this dataset, which has the Billboard Hot 100 entries for every week from August 1958 to June 2019 and various metrics such as peak position, song name, song performer, number of weeks on chart, as variables that measure the commercial performance of each song, which is an important component of my project. I used the clean_names() verb to make the data a little easier to use, but one thing I will have to think about is how I am going to grapple with 317,795 different entries in the dataset that will essentially all be important to the project I would like to do.
 
@@ -97,13 +100,13 @@ april_1_2017 <- merge(april_1_2017_billboard, april_1_2017_spotify, by = "week_p
 
 april_1_2017 <- mutate_if(april_1_2017, is.character, as.factor)
 
-#april_1_2017 <- april_1_2017 %>% fct_relevel(song, c("Shape Of You", "That's What I Like", "Bad And Boujee", "I Don't Wanna Live Forever (Fifty Shades Darker)", "I Feel It Coming", "Tunnel Vision", "Love On The Brain", "Something Just Like This", "Paris", "iSpy"))
+#april_1_2017 <- april_1_2017 %>% factor(song, c("Shape Of You", "That's What I Like", "Bad And Boujee", "I Don't Wanna Live Forever (Fifty Shades Darker)", "I Feel It Coming", "Tunnel Vision", "Love On The Brain", "Something Just Like This", "Paris", "iSpy"))
 
 plot <- april_1_2017 %>% 
   select(song, danceability, week_position) %>% 
   ggplot(aes(x = week_position, 
              y = danceability, 
-             color = april_1_2017$song)) + 
+             color = as.factor(song))) + 
   geom_point(stat = "identity") +
   labs(title = "Danceability of Billboard Top 10 Tracks",
        subtitle = "Week of April 1, 2017",
@@ -123,4 +126,20 @@ plot
 
 
 
-Here, I created a graphic that shows the danceability of the top 10 songs on the Billboard charts for the week of April 1, 2017. I had to do a variety of manipulations with the data, including the intitial filtering of the Billboard data, manually requesting the data for each of the 10 songs from the Spotify API, merging of the Spotify Data and then with the Billboard data. One of the things that really confuses me (still), and I would love if whomever is grading my milestone could help with/give me advice on, is why the factors for "song" come in correctly when I run "plot" in the .Rmd file ("Shape of You" is first), yet when I knit the file it defaults back to alphabetical order ("Bad and Boujee" is first). I also added a caption, title and subtitle, and axis labels as well as a theme to make my graphic more appealing and aesthetically coherent.
+Here, I created a graphic that shows the danceability of the top 10 songs on the Billboard charts for the week of April 1, 2017. I had to do a variety of manipulations with the data, including the intitial filtering of the Billboard data, manually requesting the data for each of the 10 songs from the Spotify API, merging of the Spotify Data and then with the Billboard data. One of the things that really confuses me (still), and I would love if whomever is grading my milestone could help with/give me advice on, is why the order for "song" in the legend comes in correctly when I run "plot" in the .Rmd file ("Shape of You" is first), yet when I knit the file it defaults back to alphabetical order ("Bad and Boujee" is first). This is not ideal for my graphic, and is slightly annoying, but I have spent an hour trying to fix it already and I have had no luck thus far. I also added a caption, title and subtitle, and axis labels as well as a theme to make my graphic more appealing and aesthetically coherent.
+
+
+## About Page
+
+NOTE: Because I think my initial idea was far too ambitious given the massive amount of data I would need to employ to do the type of analysis I planned as well as the limitations of the Spotify API, I now want to look at a different project: comparing the musical traits of the top-25 (or 50) charting artists of the 21st century in order to see what trends arise in that data. This will be a lot more feasible, since the spotify API is able to pull the entire catalog of data for an artist by name, while pulling individual songs needs to be done manually and is far more complicated. I am planning on meeting with a TF/CA at the next available study hall to talk through my idea for this, and I hope that when this Milestone is graded, the grader takes into account both the unexpected shift in my project as well as the little amount of time we have to spend actually working on the final projects with intensive problem sets and the added stress of DataCamp every week (never mind the other classes we are taking). 
+
+I will use code like this to find the 25 artists I want to get the data from. I can't actually get this code to work, which is a problem, but I am trying to demonstrate I have a plan in place for how I am going to collect my data. I plan on going to the next available studt hall and asking for help with this. I have the Spotify API data available to me and all of the Billboard data I am using imported and cleaned up, so hopefully that is sufficient for what I need to do for this milestone.
+  billboard %>% 
+  filter(week_id >= as.Date("1/1/2000", format = %m/%d/%Y)) %>% 
+  group_by(performer) %>%
+  count() %>%
+  arrange(desc(n)) %>%
+  head(25) 
+  
+With the rise of modern recording and distribution technology in the 21st century, the music industry has been rocked both by the introduction of portable cell phones and MP3 players as well as streaming platforms that give listeners access to almost the entire music landscape with a single subscription. My project, then, is going to be to look at the characteristics of the top-25 charting artists of the 21st century using both historical Billboard data from Sean Miller (https://data.world/kcmillersean/billboard-hot-100-1958-2017) as well as metadata from the Spotify API (https://developer.spotify.com/documentation/web-api/). The Spotify metadata includes very basic musical characteristics, such as mode (major or minor) and time signature, but also more complex measures such as acousticness and danceability. As of now, I plan on looking at mode, time signature (specifying how many beats are in each bar), acousticness (a confidence measure from 0 - 1.0 representing the acoustic nature of the track), danceability (a metric that combines tempo, rhythm stability, beat strength, and regularity), speechiness (representing the prescence of spoken words, which will help track the popularity of hip hop and rap music), energy (representing a perceptual measure of intensity and activity), instrumentalness (measuring how instrumental vs. vocal a track is), and loudness (measuing the average decibels present in a track). In this project, I will be looking overall at what characteristics the music of these artists share, as well as the changes over time in what characteristics become more or less prominent. I expect to see trends that correspond with the advent of digital music platforms like iTunes and streaming services such as Spotify, and for common elements of hip hop and rap music to become more prevalent over time as well.
+
